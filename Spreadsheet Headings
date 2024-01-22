@@ -1,0 +1,8 @@
+the headings are up to you - you can have many columns depending on your needs.
+Make sure that the headings in your spreadsheet match the fields in the document.
+
+headings for Mail_Merge:
+to_name	 to_title	to_company	to_address
+
+headings for Sender_Details:
+sender_name	sender_address	sender_postcode	sender_email	sender_phone
