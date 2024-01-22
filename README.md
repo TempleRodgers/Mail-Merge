@@ -3,28 +3,8 @@ Simple Mail merge using Google Docs template and Google Sheets list. This takes 
 merges it with data from a spreadsheet to create either a single document with multiple custom 
 copies of the template or multiple documents that are separate custom copies of the template.
 
-This needs a google docs template that has fields e.g.:
---------------------------------------------------------------------------------------------------------
+This needs a google docs template that has fields 
 
-                                                                    {{SENDER_NAME}}
-                                                                    {{SENDER_ADDRESS}}
-                                                                    {{SENDER_POSTCODE}}
-                                                                    {{SENDER_PHONE}}
-                                                                    {{SENDER_EMAIL}}
-                                                                    {{DATE}}
-{{TO_NAME}}
-{{TO_TITLE}}
-{{TO_COMPANY}}
-{{TO_ADDRESS}}
-Dear {{TO_NAME}},
-Type the body text here, you can embed fields such as {{TO_NAME}} and {{SENDER_NAME}} in the body text.
-Make a copy of the spreadsheet then, in the copy (you can rename) amend the sender and sender_details tab and mail_merge tab. You can change headings as you see fit, the script will work this out.
-Sincerely,
-
-
-
-{{SENDER_NAME}}
---------------------------------------------------------------------------------------------------------
 Once you've created the template, go to Tools -> Apps Script and copy/paste the two files: the Apps Script
 .gs file and the HTML .html file.
 
