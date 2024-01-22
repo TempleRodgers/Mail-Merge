@@ -5,7 +5,7 @@ copies of the template or multiple documents that are separate custom copies of 
 
 This needs a google docs template that has fields e.g.:
 --------------------------------------------------------------------------------------------------------
-                                                                    
+
                                                                     {{SENDER_NAME}}
                                                                     {{SENDER_ADDRESS}}
                                                                     {{SENDER_POSTCODE}}
