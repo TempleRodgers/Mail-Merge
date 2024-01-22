@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        background-color: #f2f2f2;
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      form {
+        margin-top: 20px;
+      }
+
+      select, input {
+        margin-top: 10px;
+      }
+
+      /* Add style for the red Cancel button */
+      input[type="button"][value="Cancel"] {
+        background-color: #ff0000;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Select a Google Sheet:</p>
+    <form>
+      <select id="sheetPicker">
+        <!-- Options will be dynamically populated with sheets from the folder -->
+      </select>
+      <br>
+      <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
+      <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
+    </form>
+    <script>
+      // Function to populate the sheet dropdown with options
+      function populateSheetOptions() {
+        google.script.run.withSuccessHandler(function(sheets) {
+          var sheetPicker = document.getElementById('sheetPicker');
+          sheets.forEach(function(sheet) {
+            var option = document.createElement('option');
+            option.value = sheet.url;
+            option.text = sheet.name;
+            sheetPicker.add(option);
+          });
+        }).getFolderSpreadsheets();
+      }
+
+      // Function to handle the sheet selection
+      function selectSheet() {
+        const selectedUrl = document.getElementById('sheetPicker').value;
+        google.script.run.setSelectedSheetUrl(selectedUrl);
+        google.script.host.close();
+      }
+
+      // Function to handle cancel button
+      function cancelSelection() {
+        google.script.host.close();
+      }
+
+      // Populate sheet options when the HTML loads
+      window.onload = function() {
+        populateSheetOptions();
+      };
+    </script>
+  </body>
+</html>
