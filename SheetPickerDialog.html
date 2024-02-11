@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      /* Set background color and border radius for the dialog */
+      body {
+        background-color: #f2f2f2;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center; /* Center content visually */
+      }
+
+      /* Style the form to improve layout */
+      form {
+        margin-top: 20px;
+      }
+
+      /* Apply consistent spacing and modern font */
+      select, input {
+        margin: 10px;
+        font-family: sans-serif;
+      }
+
+      /* Red color and white text for "Cancel" button */
+      input[type="button"][value="Cancel"] {
+        background-color: #ff0000;
+        color: #ffffff;
+      }
+
+      /* Larger font size for clearer heading */
+      h2 {
+        font-size: 1.5em;
+      }
+
+      /* Adjust dropdown width for better fit */
+      #sheetPicker {
+        width: 200px;
+      }
+
+      /* Hide loading indicator initially */
+      .loading {
+        display: none;
+        animation: spin 1s linear infinite;
+      }
+
+      /* Animation for loading indicator */
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Select a Google Sheet</h2>
+
+    <form>
+      <select id="sheetPicker">
+        <option value="" disabled selected>Please select a sheet</option>
+      </select>
+
+      <br>
+
+      <span class="loading">Loading sheets...</span>
+
+      <br>
+
+      <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
+
+      <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
+    </form>
+
+    <script>
+      // Function to fetch sheet options from Google Apps Script
+      function populateSheetOptions() {
+        // Show loading indicator while fetching sheets
+        document.querySelector('.loading').style.display = 'block';
+
+        google.script.run.withSuccessHandler(function(sheets) {
+          var sheetPicker = document.getElementById('sheetPicker');
+
+          // Clear any existing options
+          sheetPicker.innerHTML = '';
+
+          // Add "Please select" option
+          sheetPicker.add(new Option('Please select a sheet', ''));
+
+          // Loop through fetched sheets and create options
+          sheets.forEach(function(sheet) {
+            var option = document.createElement('option');
+            option.value = sheet.url;
+            option.text = sheet.name;
+            sheetPicker.add(option);
+          });
+
+          // Hide loading indicator after success
+          document.querySelector('.loading').style.display = 'none';
+        }).getFolderSpreadsheets();
+      }
+
+      // Function to handle sheet selection (call Google Apps Script)
+      function selectSheet() {
+        const selectedUrl = document.getElementById('sheetPicker').value;
+        google.script.run.setSelectedSheetUrl(selectedUrl);
+        google.script.host.close();
+      }
+
+      // Function to handle cancel button click (close dialog)
+      function cancelSelection() {
+        google.script.host.close();
+      }
+
+      // Populate sheet options when the dialog loads
+      window.onload = function() {
+        populateSheetOptions();
+      };
+    </script>
+  </body>
+</html>
