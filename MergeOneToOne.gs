@@ -122,7 +122,7 @@ function performMailMerge(spreadsheetURL) {
     toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
 
     // Perform the merge
-    mergeTemplate(mergeDoc,toMergeData);
+    mergeTemplate_(mergeDoc,toMergeData);
 
     console.log(`Merged letter ${i + 1}: docs.google.com/document/d/${mergeDocId}/edit`);
 
