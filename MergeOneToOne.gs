@@ -11,6 +11,7 @@ function onInstall(e) {
 
 function onOpen(e) {
   // console.log("adding the pull-down menu");
+  // need to use createAddonMenu because this will be an extension
   var menu = DocumentApp.getUi().createAddonMenu();
   menu.addItem('Single Letter mail merge', 'showSheetPickerDialog');
   menu.addToUi(); 
