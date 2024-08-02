@@ -5,15 +5,14 @@
  * on another
  * this video is useful: https://www.youtube.com/watch?v=QNPPEB64QbI&t=1625s
  */
-function onOpen(e)
-{
-  addMenu(); 
+function onInstall(e) {
+  onOpen(e);
 }
 
-function addMenu()
-{
-  var menu = DocumentApp.getUi().createMenu('Spreadsheet mail merge');
-  menu.addItem('Run Mail merge', 'showSheetPickerDialog');
+function onOpen(e) {
+  // console.log("adding the pull-down menu");
+  var menu = DocumentApp.getUi().createAddonMenu();
+  menu.addItem('Single Letter mail merge', 'showSheetPickerDialog');
   menu.addToUi(); 
 }
 
@@ -50,27 +49,27 @@ function getFolderSpreadsheets() {
   return sheets;
 }
 
-// get the id of the current document, which is the template
-// there are two docs: the template and the merge document
-// i.e. template... and mergeDoc...
-const templateId = DocumentApp.getActiveDocument().getId();
-const templateName = DocumentApp.getActiveDocument().getName();
-const template = DocumentApp.openById(templateId);
-const templateParagraphs = Array.from(template.getBody().getParagraphs());
-var mergeDoc = [];
-var mergeDocId = "";
-const finishedFileName = "finished testing file"
-
-
-// set the mail merge spreadsheet variables
-// the script gathers merge data from two
-// tabs in the spreadsheet: Mail_Merge and
-// Sender_Details
-var sheet = null
-   ,mailMergeTab = null
-   ,senderDataTab = null;
-
 function performMailMerge(spreadsheetURL) {
+  // get the id of the current document, which is the template
+  // there are two docs: the template and the merge document
+  // i.e. template... and mergeDoc...
+  const templateId = DocumentApp.getActiveDocument().getId();
+  const templateName = DocumentApp.getActiveDocument().getName();
+  const template = DocumentApp.openById(templateId);
+  const templateParagraphs = Array.from(template.getBody().getParagraphs());
+
+  var mergeDoc = [];
+  var mergeDocId = "";
+  const finishedFileName = "merged document"
+
+  // set the mail merge spreadsheet variables
+  // the script gathers merge data from two
+  // tabs in the spreadsheet: Mail_Merge and
+  // Sender_Details
+  var sheet = null
+    ,mailMergeTab = null
+    ,senderDataTab = null;
+
   try {
     // Open the spreadsheet and get sheets
     const sheet = SpreadsheetApp.openByUrl(spreadsheetURL);
@@ -83,17 +82,17 @@ function performMailMerge(spreadsheetURL) {
       throw new Error('Sheet named "Sender_Details" not found.');
     }
 
-  try {
-    // pull back the template file and get its information
-    const mergeDocument = DriveApp.getFileById(templateId).makeCopy('TempMergeFile - delete');
-    mergeDocId = mergeDocument.getId();
-    // copy the template and give it a temporary name (to be replaced later)
-    mergeDoc = DocumentApp.openById(mergeDocId);
-    mergeDoc.getBody().clear(); // clear the template
+    try {
+      // pull back the template file and get its information
+      const mergeDocument = DriveApp.getFileById(templateId).makeCopy('TempMergeFile - delete');
+      mergeDocId = mergeDocument.getId();
+      // copy the template and give it a temporary name (to be replaced later)
+      mergeDoc = DocumentApp.openById(mergeDocId);
+      mergeDoc.getBody().clear(); // clear the template
 
-  } catch (error) {
-    console.error(`An error occurred: ${error}`);
-  }
+    } catch (error) {
+      console.error(`An error occurred: ${error}`);
+    }
 
     // Retrieve sender data with flexible column names
     const senderData = senderDataTab.getDataRange().getValues();
@@ -105,32 +104,30 @@ function performMailMerge(spreadsheetURL) {
     const data = mailMergeTab.getDataRange().getValues();
     const columnHeaders = senderData[0].concat(data[0]); // Get headers for mapping
 
-  // Filter out header row
-  const mergeData = data.slice(1);
+    // Filter out header row
+    const mergeData = data.slice(1);
 
-  // Process each merge record
-  for (let i = 0; i < mergeData.length; i++) {
-    const record = senderData[1].concat(mergeData[i]);
-    const toMergeData = {};
+    // Process each merge record
+    for (let i = 0; i < mergeData.length; i++) {
+      const record = senderData[1].concat(mergeData[i]);
+      const toMergeData = {};
 
-    // Map merge fields dynamically based on headers
-    for (let j = 0; j < columnHeaders.length; j++) {
-      toMergeData[columnHeaders[j]] = record[j];
+      // Map merge fields dynamically based on headers
+      for (let j = 0; j < columnHeaders.length; j++) {
+        toMergeData[columnHeaders[j]] = record[j];
+      }
+
+      // Fill in additional data
+      toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
+
+      // Perform the merge
+      mergeTemplate_(mergeDoc,toMergeData,templateParagraphs);
+
+      console.log(`Merged letter ${i + 1}: docs.google.com/document/d/${mergeDocId}/edit`);
     }
-
-    // Fill in additional data
-    toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
-
-    // Perform the merge
-    mergeTemplate_(mergeDoc,toMergeData);
-
-    console.log(`Merged letter ${i + 1}: docs.google.com/document/d/${mergeDocId}/edit`);
-
-  }
       // Rename the file
     DriveApp.getFileById(mergeDocId).setName(templateName + ' - ' + finishedFileName);
   } catch (error) {
     console.error(`An error occurred: ${error}`);
-    // Display an error message to the user (implementation omitted for brevity)
   }
 }
