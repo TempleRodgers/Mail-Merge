@@ -3,118 +3,173 @@
   <head>
     <base target="_top">
     <style>
-      /* Set background color and border radius for the dialog */
       body {
         background-color: #f2f2f2;
         padding: 20px;
         border-radius: 10px;
-        text-align: center; /* Center content visually */
+        font-size: 18px; /* Set the default font size */
       }
 
-      /* Style the form to improve layout */
       form {
         margin-top: 20px;
       }
 
-      /* Apply consistent spacing and modern font */
       select, input {
-        margin: 10px;
-        font-family: sans-serif;
+        margin-top: 10px;
       }
 
-      /* Red color and white text for "Cancel" button */
+      /* Add style for the red Cancel button */
       input[type="button"][value="Cancel"] {
         background-color: #ff0000;
         color: #ffffff;
+        height: 30px;
       }
 
-      /* Larger font size for clearer heading */
-      h2 {
-        font-size: 1.5em;
+      /* Style for the dialog box text */
+      p {
+        font-size: 18px; /* Set the font size for the dialog box text */
+        font-weight: bold; /* Make the text bold */
       }
 
-      /* Adjust dropdown width for better fit */
-      #sheetPicker {
-        width: 200px;
+      /* Add styles for border */
+      label {
+        display: block;
+        margin-top: 15px;
       }
 
-      /* Hide loading indicator initially */
-      .loading {
-        display: none;
-        animation: spin 1s linear infinite;
+      select#borderColor, select#borderWidth {
+        height: 30px;
       }
 
-      /* Animation for loading indicator */
+      /* Style for text color in the dropdown */
+      select#borderColor option {
+        padding: 2px; /* Adjust padding for better appearance */
+      }
+
+      /* Style for the dynamic waiting icon (CSS spinner) */
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #808000; /* Color of the spinner */
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite; /* Animation for spinning */
+        display: none; /* Initially hide the spinner */
+        position: absolute;
+        top: 0;
+        left: 50%;
+        margin-left: -15px; /* Adjust based on half of the width */
+        z-index: 2; /* Ensure the spinner is above the other elements */
+      }
+
+      /* Animation keyframes for spinning */
       @keyframes spin {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
   </head>
   <body>
-    <h2>Select a Google Sheet</h2>
-
+    <p>Select a Google Sheet:</p>
     <form>
-      <select id="sheetPicker">
-        <option value="" disabled selected>Please select a sheet</option>
+      <label for="sheetPicker">Select Spreadsheet:</label>
+      <select id="sheetPicker" style="height: 30px;">
+        <!-- Options will be dynamically populated with sheets from the folder -->
       </select>
-
       <br>
 
-      <span class="loading">Loading sheets...</span>
-
+      <!-- Dropdown for selecting the number of columns -->
+      <label for="numColumns">Select Number of Columns:</label>
+      <select id="numColumns" style="height: 30px;">
+        <option value="2">2 Columns</option>
+        <option value="3">3 Columns</option>
+        <option value="4">4 Columns</option>
+        <option value="5">5 Columns</option>
+      </select>
       <br>
 
-      <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
+      <!-- Dropdown for selecting the borderColor -->
+      <label for="borderColor">Select Border Color:</label>
+      <select id="borderColor">
+        <option value="#ffffff" >None</option> <!-- Hex value and text color for no border -->
+        <option value="#000000" >Black</option> <!-- Hex value and text color for no border -->
+        <option value="#ff0000" style="color: #ff0000;">Red</option> <!-- Hex value and text color for Red -->
+        <option value="#00ff00" style="color: #00ff00;">Green</option> <!-- Hex value and text color for Green -->
+        <option value="#0000ff" style="color: #0000ff;">Blue</option> <!-- Hex value and text color for Blue -->
+        <option value="#ffff00" style="color: #ffff00;">Yellow</option> <!-- Hex value and text color for Yellow -->
+        <option value="#00ffff" style="color: #00ffff;">Cyan</option> <!-- Hex value and text color for Cyan -->
+        <option value="#ff00ff" style="color: #ff00ff;">Magenta</option> <!-- Hex value and text color for Magenta -->
+      </select>
+      <br>
 
+      <!-- Dropdown for selecting the borderWidth -->
+      <label for="borderWidth">Select Border Width (0-10 pixels):</label>
+      <select id="borderWidth">
+        <option value="0" selected>0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+      <br>
+
+      <!-- Dropdown for selecting the rowHeight -->
+      <label for="rowHeight">Select Row Height (2cm - 10cm):</label>
+      <input type="number" id="rowHeight" min="2" max="10" step="0.1" value="3.5">
+      <br>
+
+      <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000;height: 30px; color: #ffffff;">
+      <div class="spinner" id="waitingIcon"></div> <!-- Dynamic waiting icon (spinner) -->
       <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
     </form>
-
     <script>
-      // Function to fetch sheet options from Google Apps Script
+      // Function to populate the sheet dropdown with options
       function populateSheetOptions() {
-        // Show loading indicator while fetching sheets
-        document.querySelector('.loading').style.display = 'block';
-
         google.script.run.withSuccessHandler(function(sheets) {
           var sheetPicker = document.getElementById('sheetPicker');
-
-          // Clear any existing options
-          sheetPicker.innerHTML = '';
-
-          // Add "Please select" option
-          sheetPicker.add(new Option('Please select a sheet', ''));
-
-          // Loop through fetched sheets and create options
           sheets.forEach(function(sheet) {
             var option = document.createElement('option');
             option.value = sheet.url;
             option.text = sheet.name;
             sheetPicker.add(option);
           });
-
-          // Hide loading indicator after success
-          document.querySelector('.loading').style.display = 'none';
         }).getFolderSpreadsheets();
       }
 
-      // Function to handle sheet selection (call Google Apps Script)
+      // Function to handle the sheet selection
       function selectSheet() {
-        const selectedUrl = document.getElementById('sheetPicker').value;
-        google.script.run.setSelectedSheetUrl(selectedUrl);
-        google.script.host.close();
+        const selectedSheetUrl = document.getElementById('sheetPicker').value;
+        const selectedColumns = document.getElementById('numColumns').value;
+        const selectedBorderColor = document.getElementById('borderColor').value;
+        const selectedBorderWidth = document.getElementById('borderWidth').value;
+        const selectedRowHeight = document.getElementById('rowHeight').value;
+
+        // Display the dynamic waiting icon (spinner)
+        document.getElementById('waitingIcon').style.display = 'inline';
+
+        try {
+          google.script.run.withSuccessHandler(function () {
+            // Hide the dynamic waiting icon (spinner) when the operation is complete
+            document.getElementById('waitingIcon').style.display = 'none';
+            google.script.host.close();
+          }).setSelectedSheetUrlAndColumns(selectedSheetUrl, selectedColumns, selectedBorderColor, selectedBorderWidth, selectedRowHeight);
+        } catch (error) {
+          console.error('Error closing dialog:', error);
+        }
       }
 
-      // Function to handle cancel button click (close dialog)
+      // Function to handle cancel button
       function cancelSelection() {
         google.script.host.close();
       }
 
-      // Populate sheet options when the dialog loads
+      // Populate sheet options when the HTML loads
       window.onload = function() {
         populateSheetOptions();
       };
