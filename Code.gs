@@ -10,7 +10,7 @@ function onOpen(e)
 {
   // need to use createAddonMenu because this will be an extension
   var menu = DocumentApp.getUi().createAddonMenu();
-  menu.addItem('Run label address merge', 'showSheetPickerDialog');
+  menu.addItem('Run label data merge', 'showSheetPickerDialog');
   menu.addToUi(); 
 }
 
