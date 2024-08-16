@@ -6,7 +6,8 @@ function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
   for (let placeholder in toMergeData) {
     let value = toMergeData[placeholder] || "";
     // Correct regex - only escape special characters once:
-    let escapedPlaceholder = placeholder.replace(/[\[\]]/g, '\\\\$&');
+    // let escapedPlaceholder = placeholder.replace(/[\[\]]/g, '\\\\$&');
+    let escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     let regex = "{{"+escapedPlaceholder+"}}";
 
     console.log("Escaped Placeholder:", escapedPlaceholder);
@@ -15,7 +16,7 @@ function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
 
     temporaryBody.replaceText(regex, value);
 
-    console.log("temporaryBody (after replaceText):", temporaryBody.getText()); // Log after each replacement
+    // console.log("temporaryBody (after replaceText):", temporaryBody.getText()); // Log after each replacement
   }
 
   // Get the number of child elements in the temporary body
