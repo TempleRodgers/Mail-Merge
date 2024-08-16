@@ -6,7 +6,6 @@ function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
   for (let placeholder in toMergeData) {
     let value = toMergeData[placeholder] || "";
     // Correct regex - only escape special characters once:
-    // let escapedPlaceholder = placeholder.replace(/[\[\]]/g, '\\\\$&');
     let escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     let regex = "{{"+escapedPlaceholder+"}}";
 
