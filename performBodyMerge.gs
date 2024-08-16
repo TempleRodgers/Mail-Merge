@@ -83,6 +83,11 @@ function performBodyMerge() {
           // Add additional data
           toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
 
+          // Log values before calling mergeTemplate
+          console.log("templateBody:", templateBody.getText()); // Log the entire template body content
+          console.log("toMergeData:", toMergeData);
+          console.log("mergeDocBody:", mergeDocBody.getText()); // Log the current state of mergeDocBody
+
           // Perform the merge
           // templateBody has the merge document information to be used in the merge
           // toMergeData is the row of data that has to be merged into the template
