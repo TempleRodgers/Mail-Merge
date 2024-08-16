@@ -1,81 +1,62 @@
-function mergeTemplate(templateBody, mergeDocBody, toMergeData) {
-  const numChildren = templateBody.getNumChildren();
-
-  for (let i = 0; i < numChildren; i++) {
-    const templateElement = templateBody.getChild(i);
-    const copiedElement = templateElement.copy();
-
-    // Handle tables separately
-//    if (copiedElement.getType() === DocumentApp.ElementType.TABLE) {
-//      mergeDocBody.appendTable(copiedElement);
-//    } else {
-      // Append other elements as paragraphs
-//      mergeDocBody.appendParagraph(copiedElement);
-//    }
-  }
-
-  processDocument(mergeDocBody, toMergeData);
-}
-
-function processDocument(mergeDocBody, toMergeData) {
-  const numChildren = mergeDocBody.getNumChildren();
-  for (let i = 0; i < numChildren; i++) {
-    processElement(mergeDocBody.getChild(i), toMergeData);
-  }
-}
-
-function processElement(element, toMergeData) {
-  const elementType = element.getType();
-  Logger.log("Processing element of type: " + elementType);
-
-  switch (elementType) {
-        case DocumentApp.ElementType.PARAGRAPH:
-            element.setText(replacePlaceholders(element.getText(), toMergeData)); // Perform replacement on paragraph text
-            Logger.log('Merged Paragraph:', element.asText().getText());
-            mergeDocBody.appendParagraph(element); 
-            break;
-        case DocumentApp.ElementType.TABLE:
-            mergeDocBody.appendTable(element);
-            break;
-        case DocumentApp.ElementType.LIST_ITEM:
-            mergeDocBody.appendListItem(element);
-            break;
-        case DocumentApp.ElementType.HORIZONTAL_RULE:
-            mergeDocBody.appendHorizontalRule();
-            break; 
-        case DocumentApp.ElementType.IMAGE:
-            mergeDocBody.appendImage(element);
-            break;
-        case DocumentApp.ElementType.TABLE_CELL:
-            console.log(type);
-            mergeDocBody.appendTable(element);
-            break;
-        case DocumentApp.ElementType.PAGE_BREAK:
-            mergeDocBody.appendPageBreak();
-            break;
-        default:
-            Logger.log(`Element type:  ${elementType} not processed for replacements`);
-  }
-}
-
-function replacePlaceholdersInText(textElement, toMergeData) {
-  let text = textElement.getText();
-  Logger.log("Original Text: " + text);
+function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
+  console.log("---- Entering mergeTemplate ----");
+  console.log("temporaryBody (before):", temporaryBody.getText()); // Log the entire temporaryBody content
+  console.log("toMergeData:", toMergeData);
 
   for (let placeholder in toMergeData) {
     let value = toMergeData[placeholder] || "";
-    let regex = new RegExp(
-      "{{" + escapeRegExp(placeholder) + "}}",
-      "g"
-    );
-    text = text.replace(regex, value);
+    // Correct regex - only escape special characters once:
+    let escapedPlaceholder = placeholder.replace(/[\[\]]/g, '\\\\$&');
+    let regex = "{{"+escapedPlaceholder+"}}";
+
+    console.log("Escaped Placeholder:", escapedPlaceholder);
+    console.log("Value:", value);
+    console.log("Regex:", regex);
+
+    temporaryBody.replaceText(regex, value);
+
+    console.log("temporaryBody (after replaceText):", temporaryBody.getText()); // Log after each replacement
   }
 
-  Logger.log("Modified Text: " + text);
-  textElement.setText(text);
-}
+  // Get the number of child elements in the temporary body
+  var numChildren = temporaryBody.getNumChildren();
 
-// Helper function to escape special characters in regular expressions
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); 
-} 
+  // Loop through each child element
+  for (var i = 0; i < numChildren; i++) {
+    // Copy the element from the temporary body
+    var element = temporaryBody.getChild(i).copy();
+
+    // Determine the element type and append accordingly
+    switch (element.getType()) {
+      case DocumentApp.ElementType.PARAGRAPH:
+        console.log("Appending Paragraph:", element.asParagraph().getText());
+        mergeDocBody.appendParagraph(element);
+        break;
+      case DocumentApp.ElementType.LIST_ITEM:
+        console.log("Appending List Item:", element.asListItem().getText());
+        mergeDocBody.appendListItem(element);
+        break;
+      case DocumentApp.ElementType.TABLE:
+        console.log("Appending Table: (table data not easily accessible)");
+        mergeDocBody.appendTable(element);
+        break;
+      case DocumentApp.ElementType.HORIZONTAL_RULE:
+        console.log("Appending Horizontal Rule"); // No specific value to log
+        mergeDocBody.appendHorizontalRule();
+        break;
+      case DocumentApp.ElementType.INLINE_IMAGE:
+        console.log("Appending Inline Image:", element.asInlineImage().getBlob().getDataAsString());
+        mergeDocBody.appendImage(elementasInlineImage().getBlob());
+        break;
+      case DocumentApp.ElementType.PAGE_BREAK:
+        console.log("Appending Page Break"); // No specific value to log
+        mergeDocBody.appendPageBreak();
+        break;
+      default:
+        // Handle other element types as needed
+        console.log("Unsupported element type:", element.getType());
+        break;
+    }
+  }
+  console.log("---- Exiting mergeTemplate ----");
+}
