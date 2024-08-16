@@ -1,3 +1,4 @@
+<!-- Temple Rodgers - 21/2/24, user dialogue for mail merge -->
 <!DOCTYPE html>
 <html>
   <head>
@@ -53,24 +54,30 @@
           transform: rotate(360deg);
         }
       }
+      /* Styles for progress section */
+      .progress {
+        margin-top: 20px;
+        display: none; /* Hidden by default */
+      }
+
+      .progress p {
+        margin-bottom: 5px;
+      }
     </style>
   </head>
   <body>
     <h2>Select a Google Sheet</h2>
-
     <form>
       <select id="sheetPicker">
         <option value="" disabled selected>Please select a sheet</option>
       </select>
-
       <br>
-
+      <select id="sheetTabPicker" style="display: none;">
+        <option value="" disabled selected>Please select a tab</option>
+      </select>
       <span class="loading">Loading sheets...</span>
-
       <br>
-
       <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
-
       <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
     </form>
 
