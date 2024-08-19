@@ -1,7 +1,15 @@
+/**
+ * Temple Rodgers - 16/8/24
+ * Mail merge, getting data from a selected spreadsheet
+ * which contains sender data on one tab and merge data
+ * on another
+ * this video is useful: https://www.youtube.com/watch?v=QNPPEB64QbI&t=1625s
+ * also, the document classes and functions https://developers.google.com/apps-script/reference/document/
+ *  
+ */
 // function performBodyMerge(spreadsheetURL) {
+// for development purposes
 function performBodyMerge() {
-
-  console.log("performBodyMerge starting");
   const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
   const template = DocumentApp.getActiveDocument(),   // returns a type Document, 
                                                       // which is the current document 
@@ -73,7 +81,6 @@ function performBodyMerge() {
         // Process each merge record
         mergeData.forEach((record, i) => {
           const recordData = senderData.length > 1 ? senderData[1].concat(record) : record;
-
           const toMergeData = {};
           // Map merge fields
           columnHeaders.forEach((header, j) => {
@@ -84,15 +91,17 @@ function performBodyMerge() {
           toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
 
           // Log values before calling mergeTemplate
-          console.log("templateBody:", templateBody.getText()); // Log the entire template body content
-          console.log("toMergeData:", toMergeData);
-          console.log("mergeDocBody:", mergeDocBody.getText()); // Log the current state of mergeDocBody
+          // console.log("templateBody:", templateBody.getText()); // Log the entire template body content
+          // console.log("toMergeData:", toMergeData);
+          // console.log("mergeDocBody:", mergeDocBody.getText()); // Log the current state of mergeDocBody
 
           // Perform the merge
           // templateBody has the merge document information to be used in the merge
           // toMergeData is the row of data that has to be merged into the template
           // mergeDoc is the actual output merge document
-          mergeTemplate(templateBody, mergeDocBody, toMergeData);
+          // Create a fresh copy of the temporaryBody for each record
+          let temporaryBody = templateBody.copy(); 
+          mergeTemplate(temporaryBody, mergeDocBody, toMergeData);
 
           // Add a page break after each record (except the last one)
           if (i < mergeData.length - 1) {
