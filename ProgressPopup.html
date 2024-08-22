@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Mail Merge in Progress</h2>
+  <p>Processing <span id="processedCount">0</span> of <span id="totalCount">0</span> records...</p>
+  <script>
+    // Function to update the progress display
+    function updateProgress(processed, total) {
+      document.getElementById('processedCount').textContent = processed;
+      document.getElementById('totalCount').textContent = total;
+    }
+
+    // Function to close the progress popup
+    function closePopup() {
+      google.script.host.close(); // Close the current popup
+    }
+  </script>
+</body>
+</html>
