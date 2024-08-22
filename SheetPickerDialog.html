@@ -83,10 +83,38 @@
 
     <!-- Progress Section -->
     <div class="progress">
+      <p id="progressMessage">Gathering data...</p> <!-- New message for initial phase -->
       <p>Merging in progress... <span id="processedCount">0</span>/<span id="totalCount">0</span></p>
     </div>
 
     <script>
+      // Start polling for progress updates
+      function pollForProgress() {
+        google.script.run.withSuccessHandler(updateProgressDisplay).getProgress();
+      }
+
+      // Function to update progress
+      function updateProgressDisplay(progress) { 
+        document.getElementById('processedCount').textContent = progress.processed;
+        document.getElementById('totalCount').textContent = progress.total;
+
+        if (progress.processed === 0 && progress.total > 0) {
+          document.getElementById('progressMessage').textContent = "Merging in progress...";
+        }
+
+        if (progress.processed < progress.total) {
+          setTimeout(pollForProgress, 200); // Use a different name for clarity
+        } else {
+          completeMerge(); 
+        }
+      }
+
+      // Show initial data gathering phase (optional)
+      function showDataGathering() {
+        document.getElementById('progressMessage').textContent = "Gathering data...";
+        pollForProgress(); // Start polling
+      }
+
       // Function to fetch sheet options from Google Apps Script
       function populateSheetOptions() {
         // Show loading indicator while fetching sheets
@@ -123,33 +151,27 @@
         document.getElementById('sheetForm').style.display = 'none';
 
         // Start the mail merge process and update progress
-        google.script.run
-          .withSuccessHandler(function() {
-            updateProgress(); // Start polling for progress updates
-          })
-          .setSelectedSheetUrl(selectedUrl);
+        google.script.run.withSuccessHandler(function() {
+            pollForProgress(); // Start polling for progress updates
+        }).setSelectedSheetUrl(selectedUrl);
+      }
+
+      // Function to fetch progress from Apps Script and update the display
+      function pollForProgress() {
+        google.script.run.withSuccessHandler(updateProgressDisplay).getProgress();
+      }
+
+      // Function to handle completion of mail merge
+      function completeMerge() {
+        document.querySelector('.progress').innerHTML = `
+          <p><strong>Mail merge completed!</strong></p>
+          <button onclick="google.script.host.close()">OK</button>
+        `;
       }
 
       // Function to handle cancel button click (close dialog)
       function cancelSelection() {
         google.script.host.close();
-      }
-
-      // Function to update progress
-      function updateProgress() {
-        google.script.run.withSuccessHandler(function(progress) {
-          if (progress.processed >= progress.total) {
-            completeMerge(); // Handle completion
-          } else {
-            setTimeout(updateProgress, 10); // Poll every .01 of a second
-          }
-        }).getProgress();
-      }
-
-      // Function to handle completion of mail merge
-      function completeMerge() {
-        alert('Mail merge completed!');
-        google.script.host.close(); // Close the dialog
       }
 
       // Populate sheet options when the dialog loads
