@@ -8,7 +8,7 @@
         background-color: #f2f2f2;
         padding: 20px;
         border-radius: 10px;
-        text-align: center; /* Center content visually */
+        text-align: center;
       }
 
       /* Style the form to improve layout */
@@ -55,13 +55,20 @@
       }
 
       /* Styles for progress section */
-      .progress {
+      #progressPopup {
         margin-top: 20px;
-        display: none; /* Hidden by default */
+        display: none;
       }
 
-      .progress p {
-        margin-bottom: 5px;
+      #progressBarContainer {
+        width: 100%;
+        background-color: #ddd;
+      }
+
+      #progressBar {
+        width: 0%;
+        height: 30px;
+        background-color: #4CAF50;
       }
     </style>
   </head>
@@ -72,9 +79,6 @@
         <option value="" disabled selected>Please select a sheet</option>
       </select>
       <br>
-      <select id="sheetTabPicker" style="display: none;">
-        <option value="" disabled selected>Please select a tab</option>
-      </select>
       <span class="loading">Loading sheets...</span>
       <br>
       <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
@@ -82,37 +86,43 @@
     </form>
 
     <!-- Progress Section -->
-    <div class="progress">
-      <p id="progressMessage">Gathering data...</p> <!-- New message for initial phase -->
-      <p>Merging in progress... <span id="processedCount">0</span>/<span id="totalCount">0</span></p>
+    <div id="progressPopup">
+      <p id="statusMessage">Gathering data...</p>
+      <p id="progressCount">Processed <span id="processedCount">0</span> of <span id="totalCount">0</span></p>
+      <div id="progressBarContainer">
+        <div id="progressBar"></div>
+      </div>
+      <button id="closeButton" onclick="closePopup()">OK</button>
     </div>
 
     <script>
-      // Start polling for progress updates
+      // Function to update progress display
+      function updateProgressDisplay(progress) {
+        const statusMessage = document.getElementById('statusMessage');
+        const processedCount = document.getElementById('processedCount');
+        const totalCount = document.getElementById('totalCount');
+        const progressBar = document.getElementById('progressBar');
+        const closeButton = document.getElementById('closeButton');
+
+        totalCount.textContent = progress.total;
+        processedCount.textContent = progress.processed;
+        
+        const percentage = Math.floor((progress.processed / progress.total) * 100);
+        progressBar.style.width = percentage + '%';
+
+        if (progress.total === -1) {
+          statusMessage.textContent = "Gathering data...";
+        } else if (progress.processed < progress.total) {
+          statusMessage.textContent = "Merging in progress...";
+        } else {
+          statusMessage.textContent = "Mail merge completed!";
+          closeButton.style.display = 'block'; // Show the "OK" button
+        }
+      }
+
+      // Function to poll for progress updates
       function pollForProgress() {
         google.script.run.withSuccessHandler(updateProgressDisplay).getProgress();
-      }
-
-      // Function to update progress
-      function updateProgressDisplay(progress) { 
-        document.getElementById('processedCount').textContent = progress.processed;
-        document.getElementById('totalCount').textContent = progress.total;
-
-        if (progress.processed === 0 && progress.total > 0) {
-          document.getElementById('progressMessage').textContent = "Merging in progress...";
-        }
-
-        if (progress.processed < progress.total) {
-          setTimeout(pollForProgress, 200); // Use a different name for clarity
-        } else {
-          completeMerge(); 
-        }
-      }
-
-      // Show initial data gathering phase (optional)
-      function showDataGathering() {
-        document.getElementById('progressMessage').textContent = "Gathering data...";
-        pollForProgress(); // Start polling
       }
 
       // Function to fetch sheet options from Google Apps Script
@@ -147,30 +157,20 @@
         const selectedUrl = document.getElementById('sheetPicker').value;
 
         // Show the progress section and hide the form
-        document.querySelector('.progress').style.display = 'block';
+        document.getElementById('progressPopup').style.display = 'block';
         document.getElementById('sheetForm').style.display = 'none';
 
         // Start the mail merge process and update progress
-        google.script.run.withSuccessHandler(function() {
-            pollForProgress(); // Start polling for progress updates
-        }).setSelectedSheetUrl(selectedUrl);
-      }
-
-      // Function to fetch progress from Apps Script and update the display
-      function pollForProgress() {
-        google.script.run.withSuccessHandler(updateProgressDisplay).getProgress();
-      }
-
-      // Function to handle completion of mail merge
-      function completeMerge() {
-        document.querySelector('.progress').innerHTML = `
-          <p><strong>Mail merge completed!</strong></p>
-          <button onclick="google.script.host.close()">OK</button>
-        `;
+        google.script.run.withSuccessHandler(pollForProgress).setSelectedSheetUrl(selectedUrl);
       }
 
       // Function to handle cancel button click (close dialog)
       function cancelSelection() {
+        google.script.host.close();
+      }
+
+      // Function to close the popup
+      function closePopup() {
         google.script.host.close();
       }
 
