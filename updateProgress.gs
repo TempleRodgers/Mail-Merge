@@ -1,6 +1,6 @@
+// Function to update the progress
 function updateProgress() {
-  // Server-side function called to update progress during the merge
-  return { processed: progress.processed, total: progress.total };
+  CacheService.getScriptCache().put('progress', JSON.stringify(progress), 300); // Store progress in cache for 5 minutes
 }
 
 function closeDialog() {
@@ -8,12 +8,18 @@ function closeDialog() {
   DocumentApp.getUi().close();
 }
 
+// Function to retrieve progress
 function getProgress() {
-  console.log(`current progress = ${progress.processed} and ${progress.total}`);
-  return { processed: progress.processed, total: progress.total }; // Return an object with processed and total
+  var cachedProgress = CacheService.getScriptCache().get('progress');
+  return cachedProgress ? JSON.parse(cachedProgress) : progress;
 }
 
 function resetProgress() {
   progress.processed = 0;
   progress.total = 0;
+  CacheService.getScriptCache().put('progress', JSON.stringify(progress), 300);
+}
+
+function getProgressHandler() {
+  return getProgress();
 }
