@@ -67,7 +67,7 @@
   </head>
   <body>
     <h2>Select a Google Sheet</h2>
-    <form>
+    <form id="sheetForm">
       <select id="sheetPicker">
         <option value="" disabled selected>Please select a sheet</option>
       </select>
@@ -80,6 +80,11 @@
       <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
       <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
     </form>
+
+    <!-- Progress Section -->
+    <div class="progress">
+      <p>Merging in progress... <span id="processedCount">0</span>/<span id="totalCount">0</span></p>
+    </div>
 
     <script>
       // Function to fetch sheet options from Google Apps Script
@@ -113,10 +118,14 @@
       function selectSheet() {
         const selectedUrl = document.getElementById('sheetPicker').value;
 
-        // Run the merge process and handle the popup closures
+        // Show the progress section and hide the form
+        document.querySelector('.progress').style.display = 'block';
+        document.getElementById('sheetForm').style.display = 'none';
+
+        // Start the mail merge process and update progress
         google.script.run
           .withSuccessHandler(function() {
-            google.script.host.close(); // Close the sheet picker popup
+            updateProgress(); // Start polling for progress updates
           })
           .setSelectedSheetUrl(selectedUrl);
       }
@@ -124,6 +133,23 @@
       // Function to handle cancel button click (close dialog)
       function cancelSelection() {
         google.script.host.close();
+      }
+
+      // Function to update progress
+      function updateProgress() {
+        google.script.run.withSuccessHandler(function(progress) {
+          if (progress.processed >= progress.total) {
+            completeMerge(); // Handle completion
+          } else {
+            setTimeout(updateProgress, 10); // Poll every .01 of a second
+          }
+        }).getProgress();
+      }
+
+      // Function to handle completion of mail merge
+      function completeMerge() {
+        alert('Mail merge completed!');
+        google.script.host.close(); // Close the dialog
       }
 
       // Populate sheet options when the dialog loads
