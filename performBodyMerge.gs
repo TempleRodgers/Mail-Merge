@@ -9,6 +9,13 @@
  */
 function performBodyMerge(spreadsheetURL) {
   resetProgress(); // Reset progress at the start
+  // Update progress message for data gathering
+  progress.total = -1;  // Mark as gathering data (pseudo-progress)
+  updateProgress();      // Call the update immediately
+  
+  // Wait for a short delay to ensure the message is updated in the UI
+  Utilities.sleep(500);
+
 //function performBodyMerge() {
 //  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
 //  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
@@ -56,14 +63,13 @@ function performBodyMerge(spreadsheetURL) {
     }
     // Use the first row from senderData and mailMergeData (row 0) as the 
     // column headers and add the sender data so it's in one array
-    const columnHeaders = senderData[0]
-      ? senderData[0].concat(mailMergeData[0])
-      :mailMergeData[0];
+    const columnHeaders = senderData[0] ? senderData[0].concat(mailMergeData[0]) :mailMergeData[0];
     // Then slice of the chunk of data for the mail merge excluding headers
     const mergeData = mailMergeData.slice(1);
 
     // instantiate the global value of how many rows have been processed
-    progress.total = mergeData.length;
+    progress.total = mergeData.length; // Set total once data is gathered
+    updateProgress(); // Update progress again
 
     // now construct a set of merge data substitutions for each row, one by one and
     // call mergeTemplate to add the merged data to the merge document
@@ -102,6 +108,9 @@ function performBodyMerge(spreadsheetURL) {
 
           // Update global progress
           progress.processed = i + 1;
+
+          // progress update
+          SpreadsheetApp.flush(); // Ensure changes are saved to the spreadsheet
 
           // Add a page break after each record (except the last one)
           if (i < mergeData.length - 1) mergeDocBody.appendPageBreak();
