@@ -1,8 +1,6 @@
-function updateProgress(processed, total) {
-  // Calls the function inside the HTML to update the progress
-  DocumentApp.getUi().getActive().run(function() {
-    google.script.run.updateProgress(processed, total);
-  });
+function updateProgress() {
+  // Server-side function called to update progress during the merge
+  return { processed: progress.processed, total: progress.total };
 }
 
 function closeDialog() {
@@ -12,7 +10,7 @@ function closeDialog() {
 
 function getProgress() {
   console.log(`current progress = ${progress.processed} and ${progress.total}`);
-  return progress;
+  return { processed: progress.processed, total: progress.total }; // Return an object with processed and total
 }
 
 function resetProgress() {
