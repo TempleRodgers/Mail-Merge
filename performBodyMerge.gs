@@ -8,6 +8,7 @@
  *  
  */
 function performBodyMerge(spreadsheetURL) {
+  resetProgress(); // Reset progress at the start
 //function performBodyMerge() {
 //  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
 //  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
@@ -21,34 +22,25 @@ function performBodyMerge(spreadsheetURL) {
     // get the template body to use in the merge
     templateBody = template.getBody();
 
-  var mergeDocFile = null, // destination file info
-    mergeDocId = null, // destination doc ID
-    mergeDoc = null, // destination document
-    mergeDocBody = null,
-    finishedFileName = "finished testing file",
+  let mergeDocFile, // destination file info
+    mergeDocId, // destination doc ID
+    mergeDoc, // destination document
+    mergeDocBody;
+  let finishedFileName = "finished testing file";
     // set the mail merge spreadsheet variables
     // the script gathers merge data from two
     // tabs in the spreadsheet: Mail_Merge and
     // Sender_Details    
-    sheet = null,
-    mailMergeTab = null,
-    senderDataTab = null;
 
   try {
-    // Show the progress popup
-    var progressPopup = HtmlService.createHtmlOutputFromFile('ProgressPopup')
-      .setWidth(300)
-      .setHeight(200);
-    DocumentApp.getUi().showModalDialog(progressPopup, 'Mail Merge Progress');
-
     // Open the spreadsheet and get sheets
     sheet = SpreadsheetApp.openByUrl(spreadsheetURL); // use selectedSheetURL
 //    Logger.log("sheet value = " + sheet);
     mailMergeTab = sheet.getSheetByName("Mail_Merge"); //get the tab
+    if (!mailMergeTab) throw new Error('Sheet named "Mail_Merge" not found.');
 
-    if (!mailMergeTab) {
-      throw new Error('Sheet named "Mail_Merge" not found.');
-    }
+    // Get merge data and put it into the `data` array
+    const mailMergeData = mailMergeTab.getDataRange().getValues();
 
     // Sender Details (optional)
     const senderDataTab = sheet.getSheetByName(
@@ -62,48 +54,43 @@ function performBodyMerge(spreadsheetURL) {
         'Sheet named "Sender_Details" not found, not using sender data.'
       );
     }
-
-    // Get merge data and put it into the `data` array
-    const mailMergeData = mailMergeTab.getDataRange().getValues();
-    // Use the first row (row 0) as the column headers and add the sender data so it's in one array
+    // Use the first row from senderData and mailMergeData (row 0) as the 
+    // column headers and add the sender data so it's in one array
     const columnHeaders = senderData[0]
       ? senderData[0].concat(mailMergeData[0])
-      : mailMergeData[0];
+      :mailMergeData[0];
     // Then slice of the chunk of data for the mail merge excluding headers
     const mergeData = mailMergeData.slice(1);
 
+    // instantiate the global value of how many rows have been processed
+    progress.total = mergeData.length;
+
     // now construct a set of merge data substitutions for each row, one by one and
     // call mergeTemplate to add the merged data to the merge document
-    try {
-        // copy the template and give it a temporary name (to be replaced later)
-        mergeDocFile = templateFile.makeCopy(`${templateName} - ${finishedFileName}`);
+      // copy the template and give it a temporary name (to be replaced later)
+      mergeDocFile = templateFile.makeCopy(`${templateName} - ${finishedFileName}`);
 
-        // get the ID of the file just created
-        mergeDocId = mergeDocFile.getId();
-        // open the document just created using ID
-        mergeDoc = DocumentApp.openById(mergeDocId);
-        mergeDocBody = mergeDoc.getBody();
-        mergeDocBody.clear();
+      // get the ID of the file just created
+      mergeDocId = mergeDocFile.getId();
+      // open the document just created using ID
+      mergeDoc = DocumentApp.openById(mergeDocId);
+      mergeDocBody = mergeDoc.getBody();
+      mergeDocBody.clear();
 
-        // Process each merge record
-        mergeData.forEach((record, i) => {
-          const recordData = senderData.length > 1 ? senderData[1].concat(record) : record;
-          const toMergeData = {};
-          // *** Update the progress popup ***
-          updateProgress(i + 1, mergeData.length); 
+      // Process each merge record
+      mergeData.forEach((record, i) => {
+        const recordData = senderData.length > 1 ? senderData[1].concat(record) : record;
+        const toMergeData = {};
+        // Map merge fields
+        columnHeaders.forEach((header, j) => toMergeData[header] = recordData[j] || "");
 
-          // Map merge fields
-          columnHeaders.forEach((header, j) => {
-            toMergeData[header] = recordData[j] || "";
-          });
-
-          // Add additional data
-          toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
+        // Add additional data
+        toMergeData["date"] = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy MMMM dd");
 /** for troubleshooting
-          // Log values before calling mergeTemplate
-          console.log("templateBody:", templateBody.getText()); // Log the entire template body content
-          console.log("toMergeData:", toMergeData);
-          console.log("mergeDocBody:", mergeDocBody.getText()); // Log the current state of mergeDocBody
+        // Log values before calling mergeTemplate
+        console.log("templateBody:", templateBody.getText()); // Log the entire template body content
+        console.log("toMergeData:", toMergeData);
+        console.log("mergeDocBody:", mergeDocBody.getText()); // Log the current state of mergeDocBody
 */
           // Perform the merge
           // templateBody has the merge document information to be used in the merge
@@ -113,15 +100,12 @@ function performBodyMerge(spreadsheetURL) {
           let temporaryBody = templateBody.copy(); 
           mergeTemplate(temporaryBody, mergeDocBody, toMergeData);
 
-          // Add a page break after each record (except the last one)
-          if (i < mergeData.length - 1) {
-            mergeDocBody.appendPageBreak();
-          }
-        });
+          // Update global progress
+          progress.processed = i + 1;
 
-    } catch (error) {
-        console.error(`An error occurred: ${error}`);
-    }
+          // Add a page break after each record (except the last one)
+          if (i < mergeData.length - 1) mergeDocBody.appendPageBreak();
+        });
 
     // Save the changes to the output document
     mergeDoc.saveAndClose();
@@ -130,5 +114,6 @@ function performBodyMerge(spreadsheetURL) {
     Logger.log(`Merged letter ${templateName} - ${finishedFileName}: ${mergeDoc.getUrl()}`);
   } catch (error) {
     console.error("An error occurred during mail merge: " + error);
+    // Signal completion of the merge to the client
   }
 }
