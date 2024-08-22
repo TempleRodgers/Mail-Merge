@@ -49,6 +49,10 @@ function performBodyMerge(spreadsheetURL) {
     // Get merge data and put it into the `data` array
     const mailMergeData = mailMergeTab.getDataRange().getValues();
 
+    // for progress tracker popup
+    progress.total = mailMergeData.length - 1; // Exclude header row from total
+    updateProgress();
+
     // Sender Details (optional)
     const senderDataTab = sheet.getSheetByName(
       "Sender_Details"
@@ -107,7 +111,8 @@ function performBodyMerge(spreadsheetURL) {
           mergeTemplate(temporaryBody, mergeDocBody, toMergeData);
 
           // Update global progress
-          progress.processed = i + 1;
+          progress.processed++;
+          updateProgress();
 
           // progress update
           SpreadsheetApp.flush(); // Ensure changes are saved to the spreadsheet
