@@ -7,7 +7,11 @@
  * also, the document classes and functions https://developers.google.com/apps-script/reference/document/
  *  
  */
-function performBodyMerge(spreadsheetURL) {
+function performBodyMerge() {
+//  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
+  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
+//
+//function performBodyMerge(spreadsheetURL) {
   resetProgress(); // Reset progress at the start
   // Update progress message for data gathering
   progress.total = -1;  // Mark as gathering data (pseudo-progress)
@@ -16,10 +20,6 @@ function performBodyMerge(spreadsheetURL) {
   // Wait for a short delay to ensure the message is updated in the UI
   Utilities.sleep(500);
 
-//function performBodyMerge() {
-//  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
-//  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
-//
   const template = DocumentApp.getActiveDocument(),   // returns a type Document, 
                                                       // which is the current document 
                                                       // being used as a template
@@ -42,7 +42,7 @@ function performBodyMerge(spreadsheetURL) {
   try {
     // Open the spreadsheet and get sheets
     sheet = SpreadsheetApp.openByUrl(spreadsheetURL); // use selectedSheetURL
-//    Logger.log("sheet value = " + sheet);
+    //    Logger.log("sheet value = " + sheet);
     mailMergeTab = sheet.getSheetByName("Mail_Merge"); //get the tab
     if (!mailMergeTab) throw new Error('Sheet named "Mail_Merge" not found.');
 
@@ -67,7 +67,7 @@ function performBodyMerge(spreadsheetURL) {
     }
     // Use the first row from senderData and mailMergeData (row 0) as the 
     // column headers and add the sender data so it's in one array
-    const columnHeaders = senderData[0] ? senderData[0].concat(mailMergeData[0]) :mailMergeData[0];
+    const columnHeaders = senderData[0] ? senderData[0].concat(mailMergeData[0]) : mailMergeData[0];
     // Then slice of the chunk of data for the mail merge excluding headers
     const mergeData = mailMergeData.slice(1);
 
@@ -118,8 +118,9 @@ function performBodyMerge(spreadsheetURL) {
           SpreadsheetApp.flush(); // Ensure changes are saved to the spreadsheet
 
           // Add a page break after each record (except the last one)
-          if (i < mergeData.length - 1) mergeDocBody.appendPageBreak();
-        });
+          if (i < mergeData.length - 1) 
+            mergeDocBody.appendPageBreak();
+      });
 
     // Save the changes to the output document
     mergeDoc.saveAndClose();
