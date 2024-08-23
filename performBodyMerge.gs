@@ -1,5 +1,5 @@
 /**
- * Temple Rodgers - 16/8/24
+ * Temple Rodgers - 23/8/24
  * Mail merge, getting data from a selected spreadsheet
  * which contains sender data on one tab and merge data
  * on another
@@ -7,11 +7,11 @@
  * also, the document classes and functions https://developers.google.com/apps-script/reference/document/
  *  
  */
-//function performBodyMerge() {
+function performBodyMerge() {
 //  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
-//  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
+  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
 //
-function performBodyMerge(spreadsheetURL) {
+// function performBodyMerge(spreadsheetURL) {
   resetProgress(); // Reset progress at the start
   // Update progress message for data gathering
   progress.total = -1;  // Mark as gathering data (pseudo-progress)
@@ -33,7 +33,7 @@ function performBodyMerge(spreadsheetURL) {
     mergeDocId, // destination doc ID
     mergeDoc, // destination document
     mergeDocBody;
-  let finishedFileName = "finished testing file";
+
     // set the mail merge spreadsheet variables
     // the script gathers merge data from two
     // tabs in the spreadsheet: Mail_Merge and
@@ -77,8 +77,18 @@ function performBodyMerge(spreadsheetURL) {
 
     // now construct a set of merge data substitutions for each row, one by one and
     // call mergeTemplate to add the merged data to the merge document
-      // copy the template and give it a temporary name (to be replaced later)
-      mergeDocFile = templateFile.makeCopy(`${templateName} - ${finishedFileName}`);
+    // copy the template and give it a temporary name
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = ('0' + (date.getMonth() + 1)).slice(-2); // Add leading zero if needed
+        const day = ('0' + date.getDate()).slice(-2); // Add leading zero if needed
+        const hours = ('0' + date.getHours()).slice(-2); // Add leading zero if needed
+        const minutes = ('0' + date.getMinutes()).slice(-2); // Add leading zero if needed
+
+        const dateandtime = `${year}${month}${day} ${hours}:${minutes}`;
+
+        let finishedFileName = `finished merge file - ${dateandtime}`;
+        mergeDocFile = templateFile.makeCopy(`${templateName} - ${finishedFileName}`);
 
       // get the ID of the file just created
       mergeDocId = mergeDocFile.getId();
