@@ -47,7 +47,14 @@ function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
         break;
       case DocumentApp.ElementType.TABLE:
 //        console.log("Appending Table: (table data not easily accessible)");
-        mergeDocBody.appendTable(element);
+        const table = element.asTable();
+        const newTable = mergeDocBody.appendTable();
+        for (let row = 0; row < table.getNumRows(); row++) {
+          const newRow = newTable.appendTableRow();
+          for (let col = 0; col < table.getRow(row).getNumCells(); col++) {
+            newRow.appendTableCell(table.getRow(row).getCell(col).copy());
+          }
+        }
         break;
       case DocumentApp.ElementType.HORIZONTAL_RULE:
 //        console.log("Appending Horizontal Rule"); // No specific value to log
@@ -55,7 +62,10 @@ function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
         break;
       case DocumentApp.ElementType.INLINE_IMAGE:
 //        console.log("Appending Inline Image:", element.asInlineImage().getBlob().getDataAsString());
-        mergeDocBody.appendImage(elementasInlineImage().getBlob());
+//        destinationBody.appendImage(element.asInlineImage().getBlob());
+        const inlineImage = element.asInlineImage();
+        const copiedImage = inlineImage.copy(); // Create a deep copy
+        mergeDocBody.appendImage(copiedImage); // Append the copied image
         break;
       case DocumentApp.ElementType.PAGE_BREAK:
 //        console.log("Appending Page Break"); // No specific value to log
@@ -67,5 +77,5 @@ function mergeTemplate(temporaryBody, mergeDocBody, toMergeData) {
         break;
     }
   }
-  console.log("---- Exiting mergeTemplate ----");
+  console.log('merge record ${}');
 }
