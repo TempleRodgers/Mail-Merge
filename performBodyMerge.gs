@@ -7,11 +7,11 @@
  * also, the document classes and functions https://developers.google.com/apps-script/reference/document/
  *  
  */
-function performBodyMerge() {
+//function performBodyMerge() {
 //  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/158Md3meKiyZAO2aXj5qnQaosCRU4Fp7R_Ecss7gsrr0/edit?usp=drivesdk";
-  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
+//  const spreadsheetURL = "https://docs.google.com/spreadsheets/d/1UkipnRBM0xPMCAu8bbKYjAnIt1FBv__jxzhzB3hVbyk/edit?usp=drivesdk";
 //
-//function performBodyMerge(spreadsheetURL) {
+function performBodyMerge(spreadsheetURL) {
   resetProgress(); // Reset progress at the start
   // Update progress message for data gathering
   progress.total = -1;  // Mark as gathering data (pseudo-progress)
@@ -67,7 +67,7 @@ function performBodyMerge() {
     }
     // Use the first row from senderData and mailMergeData (row 0) as the 
     // column headers and add the sender data so it's in one array
-    const columnHeaders = senderData[0] ? senderData[0].concat(mailMergeData[0]) : mailMergeData[0];
+    const columnHeaders = mailMergeData[0] ? mailMergeData[0].concat(senderData[0]) : senderData[0];
     // Then slice of the chunk of data for the mail merge excluding headers
     const mergeData = mailMergeData.slice(1);
 
@@ -89,7 +89,8 @@ function performBodyMerge() {
 
       // Process each merge record
       mergeData.forEach((record, i) => {
-        const recordData = senderData.length > 1 ? senderData[1].concat(record) : record;
+        const recordData = senderData.length > 1 ? record.concat(senderData[1]) : record;
+        // const recordData = senderData.length > 1 ? senderData[1].concat(record) : record;
         const toMergeData = {};
         // Map merge fields
         columnHeaders.forEach((header, j) => toMergeData[header] = recordData[j] || "");
