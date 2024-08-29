@@ -73,26 +73,29 @@
     </style>
   </head>
   <body>
-    <h2>Select a Google Sheet</h2>
-    <form id="sheetForm">
-      <select id="sheetPicker">
-        <option value="" disabled selected>Please select a sheet</option>
-      </select>
-      <br>
-      <span class="loading">Loading sheets...</span>
-      <br>
-      <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
-      <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
-    </form>
+    <!-- First dialog: Select a Google Sheet -->
+    <div id="sheetSelection">
+      <h2>Select a Google Sheet</h2>
+      <form id="sheetForm">
+        <select id="sheetPicker">
+          <option value="" disabled selected>Please select a sheet</option>
+        </select>
+        <br>
+        <span class="loading">Loading sheets...</span>
+        <br>
+        <input type="button" value="Select" onclick="selectSheet()" style="background-color: #808000; color: #ffffff;">
+        <input type="button" value="Cancel" onclick="cancelSelection()" style="background-color: #ff0000; color: #ffffff;">
+      </form>
+    </div>
 
-    <!-- Progress Section -->
+    <!-- Second and Third dialogs: Progress Section -->
     <div id="progressPopup">
-      <p id="statusMessage">Gathering data...</p>
+      <p id="statusMessage">Gathering data ... allow 1 minute</p>
       <p id="progressCount">Processed <span id="processedCount">0</span> of <span id="totalCount">0</span></p>
       <div id="progressBarContainer">
         <div id="progressBar"></div>
       </div>
-      <button id="closeButton" onclick="closePopup()">OK</button>
+      <button id="closeButton" onclick="closePopup()" style="display: none;">OK</button>
     </div>
 
     <script>
@@ -111,12 +114,14 @@
         progressBar.style.width = percentage + '%';
 
         if (progress.total === -1) {
-          statusMessage.textContent = "Gathering data...";
+          statusMessage.textContent = "Gathering data... allow 1 minute";
+          closeButton.style.display = 'none'; // Hide the "OK" button for the second dialog
         } else if (progress.processed < progress.total) {
           statusMessage.textContent = "Merging in progress...";
+          closeButton.style.display = 'none'; // Keep hiding the "OK" button during merging
         } else {
           statusMessage.textContent = "Mail merge completed!";
-          closeButton.style.display = 'block'; // Show the "OK" button
+          closeButton.style.display = 'block'; // Show the "OK" button for the third dialog
         }
       }
 
@@ -127,7 +132,6 @@
 
       // Function to fetch sheet options from Google Apps Script
       function populateSheetOptions() {
-        // Show loading indicator while fetching sheets
         document.querySelector('.loading').style.display = 'block';
 
         google.script.run.withSuccessHandler(function(sheets) {
@@ -139,7 +143,6 @@
           // Add "Please select" option
           sheetPicker.add(new Option('Please select a sheet', ''));
 
-          // Loop through fetched sheets and create options
           sheets.forEach(function(sheet) {
             var option = document.createElement('option');
             option.value = sheet.url;
@@ -147,7 +150,6 @@
             sheetPicker.add(option);
           });
 
-          // Hide loading indicator after success
           document.querySelector('.loading').style.display = 'none';
         }).getFolderSpreadsheets();
       }
@@ -155,10 +157,16 @@
       // Function to handle sheet selection
       function selectSheet() {
         const selectedUrl = document.getElementById('sheetPicker').value;
+        const sheetPicker = document.getElementById('sheetPicker'); // Get the select element
+
+        // Remove the "Please select" option only after a sheet is selected
+        if (sheetPicker.options[0].value === "") {
+          sheetPicker.options[0] = null; // Remove the first option
+        }
 
         // Show the progress section and hide the form
         document.getElementById('progressPopup').style.display = 'block';
-        document.getElementById('sheetForm').style.display = 'none';
+        document.getElementById('sheetSelection').style.display = 'none';
 
         // Start the mail merge process and update progress
         google.script.run.withSuccessHandler(pollForProgress).setSelectedSheetUrl(selectedUrl);
