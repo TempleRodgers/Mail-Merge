@@ -3,11 +3,16 @@
  * Simple mail merge from one template,
  * creating many merged output files
  */
-function onOpen(e) {
-   console.log("adding the pull-down menu");
-   var menu = DocumentApp.getUi().createMenu('Spreadsheet mail merge');
-   menu.addItem('Run Mail merge', 'showSheetPickerDialog');
-   menu.addToUi();
+function onInstall(e) {
+  onOpen(e);
+}
+
+function onOpen(e)
+{
+  // console.log("adding the pull-down menu");
+  var menu = DocumentApp.getUi().createAddonMenu();
+  menu.addItem('Run Mail merge', 'showSheetPickerDialog');
+  menu.addToUi(); 
 }
 
 // global variable for the selected sheet
@@ -33,6 +38,7 @@ function getFolderSpreadsheets() {
    var folder = DriveApp.getFolderById(folderId);
    var files = folder.getFilesByType(MimeType.GOOGLE_SHEETS);
    var sheets = [];
+
    while (files.hasNext()) {
        var file = files.next();
        sheets.push({name: file.getName(), url: file.getUrl()});
@@ -40,13 +46,13 @@ function getFolderSpreadsheets() {
    return sheets;
 }
 
-// get the id of the current document, which is the template
 // set the mail merge spreadsheet variables
 var sheet = null
    , mailMergeTab = null
    , senderDataTab = null;
 
 function performMailMerge(spreadsheetURL) {
+  spreadsheetURL = "https://docs.google.com/spreadsheets/d/1kzwtS7uywB-faZjZRRI5vMN1c7pyZoMwPX1zWBEGqWY/edit?usp=drivesdk";
    const templateName = DocumentApp.getActiveDocument().getName();
 
    try {
@@ -66,9 +72,8 @@ function performMailMerge(spreadsheetURL) {
 
        // Get merge data with flexible column names
        const data = mailMergeTab.getDataRange().getValues();
+       // const columnHeaders = senderData[0].concat(data[0]).map(header => header.toUpperCase());
        const columnHeaders = senderData[0].concat(data[0]); // Get headers for mapping
-
-       // Filter out header row
        const mergeData = data.slice(1);
 
        // Process each merge record
@@ -110,16 +115,21 @@ function mergeTemplate(mergeData, senderData) {
        // Collect replacement pairs
        //replacements = [];
        for (const [key, value] of Object.entries(mergeData)) {
-           replacements.push({placeholder: `{{${key.toUpperCase()}}}`, value});
+           //replacements.push({placeholder: `{{${key.toUpperCase()}}}`, value});
+           replacements.push({placeholder: `{{${key}}}`, value});
        }
 
        for (const [key, value] of Object.entries(senderData)) {
-           replacements.push({placeholder: `{{${key.toUpperCase()}}}`, value});
+           //replacements.push({placeholder: `{{${key.toUpperCase()}}}`, value});
+           replacements.push({placeholder: `{{${key}}}`, value});
        }
 
        // Batch replace text in the document
        for (const replacement of replacements) {
-           body.replaceText(replacement.placeholder, replacement.value);
+             // make the search & replace case insensitive using a REGEX
+             var caseInsensitivePlaceholder = '(?i)' + replacement.placeholder;
+             body.replaceText(caseInsensitivePlaceholder, replacement.value);
+//           body.replaceText(replacement.placeholder, replacement.value);
        }
 
        // Rename the file
@@ -133,6 +143,8 @@ function mergeTemplate(mergeData, senderData) {
 
 function copyTemplate() {
    const templateName = DocumentApp.getActiveDocument().getName();
+
+   // get the id of the current document, which is the template
    const templateId = DocumentApp.getActiveDocument().getId();
    try {
        // pull back the template file
